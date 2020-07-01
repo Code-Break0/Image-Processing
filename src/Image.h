@@ -21,5 +21,7 @@ struct Image {
 	bool write(const char* filename);
 
 	ImageType getFileType(const char* filename);
+	
+	Image& colorMask(float r, float g, float b);
 
 };

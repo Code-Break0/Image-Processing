@@ -3,14 +3,15 @@
 
 int main(int argc, char** argv) {
 	Image test("test.jpg");
-	test.write("new.png");
-	Image copy = test;
-	for(int i = 0;i < copy.w*copy.channels;++i) {
-		copy.data[i] = 255;
-	}
-	copy.write("copy.png");
-	Image blank(100,100, 3);
-	blank.write("blank.jpg");
+
+	test.encodeMessage("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque tempor rhoncus est, quis sodales erat. Etiam ac malesuada nulla. In auctor porta risus vulputate suscipit. Maecenas posuere pharetra convallis. Curabitur cursus enim et arcu auctor, id pellentesque lectus elementum. Quisque ligula urna, gravida in mauris in, blandit fermentum eros. Etiam rutrum hendrerit tortor eu tempor. Duis at felis risus. In porta fermentum justo ut ullamcorper. Morbi ac arcu quam. Nullam fermentum rutrum sodales. Proin molestie pretium consectetur. Phasellus porttitor tempor nisl a tincidunt. Ut laoreet ipsum id ante pretium, a ultrices nisi dapibus.\nVivamus sollicitudin venenatis nunc, eu euismod lacus ultricies at. Maecenas eget aliquet risus. Vivamus erat dolor, ornare id massa et, tincidunt dapibus nunc. Suspendisse pharetra sapien quis mauris eleifend, non rutrum risus viverra. Vestibulum id sem est. Morbi maximus mauris nunc, vel rutrum velit pulvinar ac. Quisque interdum tristique justo, vulputate tristique metus laoreet vel. Morbi eleifend vulputate laoreet. Mauris faucibus nisi id massa efficitur tincidunt. Ut mollis egestas elit eu commodo. Duis imperdiet placerat libero, et iaculis lorem dignissim in. Quisque pellentesque neque sed elit pellentesque imperdiet id in ipsum.\nNulla vel magna in sem placerat pellentesque. Maecenas eu orci nec ante condimentum mollis. Quisque maximus iaculis nisi vitae luctus. Sed ullamcorper mattis massa, ut pellentesque diam molestie cursus. Sed aliquet tempor lacus, id porttitor turpis dictum vel. Phasellus at mattis dolor. Aenean at mollis mauris. Nulla mauris justo, vestibulum eget maximus eget, mattis at tortor. Nam ultrices felis id augue ornare, auctor porttitor sapien iaculis. Aenean vehicula vehicula risus nec tincidunt. Curabitur porttitor, sapien ut aliquet suscipit, libero nibh rhoncus mauris, vel pretium lacus massa vel nunc. In ullamcorper accumsan massa sit amet mollis. Nulla tempus risus vel quam faucibus, vitae rutrum sapien posuere. Fusce non lacinia lacus, in sollicitudin ante. Pellentesque vestibulum suscipit nunc, consectetur tempor lacus. Mauris rutrum orci quis sapien aliquam, ac accumsan sem mollis.\nIn scelerisque bibendum dolor, eget faucibus tortor porta nec. Nunc ac facilisis nibh. Aliquam tincidunt, nisi in consectetur tempor, est nunc varius dolor, ut sagittis risus leo non tellus. Nunc dignissim justo ac dui aliquam, nec consequat sapien pellentesque. Pellentesque malesuada lectus nec massa iaculis cursus. Cras scelerisque urna et eros commodo, et tempus justo imperdiet. Quisque molestie ut mauris quis rhoncus. Nullam pellentesque et turpis quis viverra. Aenean tincidunt et tellus facilisis euismod. Pellentesque dolor enim, mollis sit amet rhoncus eget, ultrices sit amet nisi. Donec at erat a ante venenatis semper quis vel nisl. Sed a tempus libero. Nullam ut euismod ante, ut vehicula dolor. Mauris metus nulla, faucibus et nunc nec, sodales finibus elit. Nam lobortis, ligula at accumsan varius, metus nunc varius sapien, commodo condimentum nunc sem non lorem. Nunc condimentum enim neque.\nVestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum condimentum mattis blandit. Suspendisse faucibus, magna ac congue ornare, ex leo blandit sapien, eu finibus nunc augue et tortor. Proin eget sapien sed odio rutrum pulvinar. Nam varius semper consectetur. Curabitur dolor augue, convallis id arcu posuere, tempor fermentum quam. Phasellus eros est, viverra quis maximus at, fringilla quis ante. Morbi suscipit ipsum id commodo mollis. Morbi efficitur, ex ac sagittis porttitor, neque purus ornare massa, a venenatis orci ex eget lectus. Maecenas ultricies sit amet purus in porttitor. Quisque ultricies odio vitae ullamcorper dignissim. Pellentesque fringilla at lacus aliquet auctor. Aenean porttitor, metus nec tristique vehicula, nunc metus vehicula neque, mattis accumsan libero nunc ultrices dui. Nunc efficitur facilisis enim, ac feugiat erat pulvinar quis. Donec nec vehicula libero.");
+	test.write("SecretMessage.png");
+
+	char buffer[4103] = {0};
+	size_t len = 0;
+	test.decodeMessage(buffer, &len);
+
+	printf("Message: %s (%zu)\n", buffer, len);
 
 	return 0;
 }

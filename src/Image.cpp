@@ -35,7 +35,7 @@ bool Image::read(const char* filename) {
 }
 
 bool Image::write(const char* filename) {
-	ImageType type = getFileType(filename);
+	ImageType type = get_file_type(filename);
 	int success;
   switch (type) {
     case PNG:
@@ -54,7 +54,7 @@ bool Image::write(const char* filename) {
   return success != 0;
 }
 
-ImageType Image::getFileType(const char* filename) {
+ImageType Image::get_file_type(const char* filename) {
 	const char* ext = strrchr(filename, '.');
 	if(ext != nullptr) {
 		if(strcmp(ext, ".png") == 0) {
@@ -73,7 +73,66 @@ ImageType Image::getFileType(const char* filename) {
 	return PNG;
 }
 
-Image& Image::colorMask(float r, float g, float b) {
+
+Image& Image::convolve_sd(uint8_t channel, uint32_t ker_w, uint32_t ker_h, double ker[]) {
+	uint8_t new_data[w*h];
+	uint64_t center = ker_w*ker_h/2;
+	for(uint64_t k=channel; k<size; k+=channels) {
+		double c = 0;
+		for(int i= -(int)ker_h/2; i <= (int)ker_h/2; ++i) {
+			int row = ((int)k/channels)/w + i;
+			if((row < 0) || (row > h-1)) {
+				continue;
+			}
+			for(int j = -(int)ker_w/2; j <= (int)ker_w/2; ++j) {
+				int col = ((int)k/channels)%w+j;
+				if((col < 0) || (col > w-1)) {
+					continue;
+				}
+				else {
+					c += ker[center+i*(int)ker_w+j]*data[k+(i*w+j)*(int)channels];
+				}
+			}
+		}
+		new_data[k/channels] = (uint8_t)round(c);
+	}
+	for(uint64_t k=channel; k<size; k+=channels) {
+		data[k] = new_data[k/channels];
+	}
+	return *this;
+}
+
+
+Image& Image::grayscale_avg() {
+	if(channels < 3) {
+		printf("Image %p has less than 3 channels, it is assumed to already be grayscale.", this);
+	}
+	else {
+		for(int i = 0; i < size; i+=channels) {
+			//(r+g+b)/3
+			int gray = (data[i] + data[i+1] + data[i+2])/3;
+			memset(data+i, gray, 3);
+		}
+	}
+	return *this;
+}
+
+
+Image& Image::grayscale_lum() {
+	if(channels < 3) {
+		printf("Image %p has less than 3 channels, it is assumed to already be grayscale.", this);
+	}
+	else {
+		for(int i = 0; i < size; i+=channels) {
+			int gray = 0.2126*data[i] + 0.7152*data[i+1] + 0.0722*data[i+2];
+			memset(data+i, gray, 3);
+		}
+	}
+	return *this;
+}
+
+
+Image& Image::color_mask(float r, float g, float b) {
 	if(channels < 3) {
 		printf("\e[31m[ERROR] Color mask requires at least 3 channels, but this image has %d channels\e[0m\n", channels);
 	}
@@ -86,3 +145,45 @@ Image& Image::colorMask(float r, float g, float b) {
 	}
 	return *this;
 }
+
+
+
+
+Image& Image::encodeMessage(const char* message) {
+	uint32_t len = strlen(message) * 8;
+	if(len + STEG_HEADER_SIZE > size) {
+		printf("\e[31m[ERROR] This message is too large (%lu bits / %zu bits)\e[0m\n", len+STEG_HEADER_SIZE, size);
+		return *this;
+	}
+
+	for(uint8_t i = 0;i < STEG_HEADER_SIZE;++i) {
+		data[i] &= 0xFE;
+		data[i] |= (len >> (STEG_HEADER_SIZE - 1 - i)) & 1UL;
+	}
+
+	for(uint32_t i = 0;i < len;++i) {
+		data[i+STEG_HEADER_SIZE] &= 0xFE;
+		data[i+STEG_HEADER_SIZE] |= (message[i/8] >> ((len-1-i)%8)) & 1;
+	}
+
+	return *this;
+}
+
+Image& Image::decodeMessage(char* buffer, size_t* messageLength) {
+	uint32_t len = 0;
+	for(uint8_t i = 0;i < STEG_HEADER_SIZE;++i) {
+		len = (len << 1) | (data[i] & 1);
+	}
+	*messageLength = len / 8;
+
+	for(uint32_t i = 0;i < len;++i) {
+		buffer[i/8] = (buffer[i/8] << 1) | (data[i+STEG_HEADER_SIZE] & 1);
+	}
+
+
+	return *this;
+}
+
+
+
+

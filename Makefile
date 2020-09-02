@@ -1,4 +1,4 @@
-CC				:= g++
+CC			:= g++
 TARGET		:= "ImageProcessing"
 BUILDDIR	:= build
 SRCDIR		:= src
@@ -11,12 +11,12 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@printf "\e[33m\e[1mBuilding...\e[0m\n";
 	@mkdir -p $(BUILDDIR)
 	@echo "  $(notdir $@) from $(notdir $<)"
-	$(CC) $(CFLAGS) -c -o $@ $<
+	@$(CC) $(CFLAGS) -c -o $@ $<
 
 $(TARGET): $(OBJECTS)
 	@printf "\e[35m\e[1mLinking...\e[0m\n";
 	@echo "  $(notdir $(OBJECTS))"
-	$(CC) $(CFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS) -o $@ $^
 
 
 PHONY: clean

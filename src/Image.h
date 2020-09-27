@@ -25,7 +25,14 @@ struct Image {
 	ImageType get_file_type(const char* filename);
 
 	
-	Image& convolve_sd(uint8_t channel, uint32_t ker_w, uint32_t ker_h, double ker[]);
+
+
+	
+
+
+	
+	Image& diffmap(Image& img);
+	Image& diffmap_scale(Image& img, uint8_t scl = 0);
 
 
 	Image& grayscale_avg();
@@ -33,6 +40,7 @@ struct Image {
 
 	Image& color_mask(float r, float g, float b);
 
+	
 	Image& encodeMessage(const char* message);
 	Image& decodeMessage(char* buffer, size_t* messageLength);
 

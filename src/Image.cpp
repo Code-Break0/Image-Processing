@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define BYTE_BOUND(value) value < 0 ? 0 : (value > 255 ? 255 : value)
 #include "Image.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -74,30 +75,41 @@ ImageType Image::get_file_type(const char* filename) {
 }
 
 
-Image& Image::convolve_sd(uint8_t channel, uint32_t ker_w, uint32_t ker_h, double ker[]) {
-	uint8_t new_data[w*h];
-	uint64_t center = ker_w*ker_h/2;
-	for(uint64_t k=channel; k<size; k+=channels) {
-		double c = 0;
-		for(int i= -(int)ker_h/2; i <= (int)ker_h/2; ++i) {
-			int row = ((int)k/channels)/w + i;
-			if((row < 0) || (row > h-1)) {
-				continue;
-			}
-			for(int j = -(int)ker_w/2; j <= (int)ker_w/2; ++j) {
-				int col = ((int)k/channels)%w+j;
-				if((col < 0) || (col > w-1)) {
-					continue;
-				}
-				else {
-					c += ker[center+i*(int)ker_w+j]*data[k+(i*w+j)*(int)channels];
-				}
+
+
+
+
+
+
+Image& Image::diffmap(Image& img) {
+	int compare_width = fmin(w,img.w);
+	int compare_height = fmin(h,img.h);
+	int compare_channels = fmin(channels,img.channels);
+	for(uint32_t i=0; i<compare_height; ++i) {
+		for(uint32_t j=0; j<compare_width; ++j) {
+			for(uint8_t k=0; k<compare_channels; ++k) {
+				data[(i*w+j)*channels+k] = BYTE_BOUND(abs(data[(i*w+j)*channels+k] - img.data[(i*img.w+j)*img.channels+k]));
 			}
 		}
-		new_data[k/channels] = (uint8_t)round(c);
 	}
-	for(uint64_t k=channel; k<size; k+=channels) {
-		data[k] = new_data[k/channels];
+	return *this;
+}
+Image& Image::diffmap_scale(Image& img, uint8_t scl) {
+	int compare_width = fmin(w,img.w);
+	int compare_height = fmin(h,img.h);
+	int compare_channels = fmin(channels,img.channels);
+	uint8_t largest = 0;
+	for(uint32_t i=0; i<compare_height; ++i) {
+		for(uint32_t j=0; j<compare_width; ++j) {
+			for(uint8_t k=0; k<compare_channels; ++k) {
+				data[(i*w+j)*channels+k] = BYTE_BOUND(abs(data[(i*w+j)*channels+k] - img.data[(i*img.w+j)*img.channels+k]));
+				largest = fmax(largest, data[(i*w+j)*channels+k]);
+			}
+		}
+	}
+	scl = 255/fmax(1, fmax(scl, largest));
+	for(int i=0; i<size; ++i) {
+		data[i] *= scl;
 	}
 	return *this;
 }

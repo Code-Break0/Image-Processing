@@ -44,7 +44,8 @@ struct Image {
 	Image& encodeMessage(const char* message);
 	Image& decodeMessage(char* buffer, size_t* messageLength);
 
-
+	Image& flipX();
+	Image& flipY();
 };
 
 

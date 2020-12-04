@@ -207,35 +207,81 @@ Image& Image::decodeMessage(char* buffer, size_t* messageLength) {
 
 
 
-	Image& Image::flipX() {
-		uint8_t tmp[4];
-		uint8_t* px1;
-		uint8_t* px2;
-		for(int y = 0;y < h;++y) {
-			for(int x = 0;x < w/2;++x) {
-				px1 = &data[(x + y * w) * channels];
-				px2 = &data[((w - 1 - x) + y * w) * channels];
+Image& Image::flipX() {
+	uint8_t tmp[4];
+	uint8_t* px1;
+	uint8_t* px2;
+	for(int y = 0;y < h;++y) {
+		for(int x = 0;x < w/2;++x) {
+			px1 = &data[(x + y * w) * channels];
+			px2 = &data[((w - 1 - x) + y * w) * channels];
 
-				memcpy(tmp, px1, channels);
-				memcpy(px1, px2, channels);
-				memcpy(px2, tmp, channels);
-			}
+			memcpy(tmp, px1, channels);
+			memcpy(px1, px2, channels);
+			memcpy(px2, tmp, channels);
 		}
-		return *this;
 	}
-	Image& Image::flipY() {
-		uint8_t tmp[4];
-		uint8_t* px1;
-		uint8_t* px2;
-		for(int x = 0;x < w;++x) {
-			for(int y = 0;y < h/2;++y) {
-				px1 = &data[(x + y * w) * channels];
-				px2 = &data[(x + (h - 1 - y) * w) * channels];
+	return *this;
+}
+Image& Image::flipY() {
+	uint8_t tmp[4];
+	uint8_t* px1;
+	uint8_t* px2;
+	for(int x = 0;x < w;++x) {
+		for(int y = 0;y < h/2;++y) {
+			px1 = &data[(x + y * w) * channels];
+			px2 = &data[(x + (h - 1 - y) * w) * channels];
 
-				memcpy(tmp, px1, channels);
-				memcpy(px1, px2, channels);
-				memcpy(px2, tmp, channels);
-			}
+			memcpy(tmp, px1, channels);
+			memcpy(px1, px2, channels);
+			memcpy(px2, tmp, channels);
 		}
-		return *this;
 	}
+	return *this;
+}
+
+Image& Image::overlay(const Image& source, int x, int y) {
+
+	uint8_t* srcPx;
+	uint8_t* dstPx;
+
+	for(int sy = 0;sy < source.h;++sy) {
+		if(sy + y < 0) {continue;}
+		else if(sy + y >= h) {break;}
+		for(int sx = 0;sx < source.w;++sx) {
+			if(sx + x < 0) {continue;}
+			else if(sx + x >= w) {break;}
+			srcPx = &source.data[(sx + sy * source.w) * source.channels];
+			dstPx = &data[(sx + x + (sy + y) * w) * channels];
+
+			float srcAlpha = source.channels < 4 ? 1 : srcPx[3] / 255.f;
+			float dstAlpha = channels < 4 ? 1 : dstPx[3] / 255.f;
+
+			if(srcAlpha > .99 && dstAlpha > .99) {
+				if(source.channels >= channels) {
+					memcpy(dstPx, srcPx, channels);
+				}
+				else {
+					// In case our source image is grayscale and the dest one isnt
+					memset(dstPx, srcPx[0], channels);
+				}
+			}
+			else {
+				float outAlpha = srcAlpha + dstAlpha * (1 - srcAlpha);
+				if(outAlpha < .01) {
+					memset(dstPx, 0, channels);
+				}
+				else {
+					for(int chnl = 0;chnl < channels;++chnl) {
+						dstPx[chnl] = (uint8_t)BYTE_BOUND((srcPx[chnl]/255.f * srcAlpha + dstPx[chnl]/255.f * dstAlpha * (1 - srcAlpha)) / outAlpha * 255.f);
+					}
+					if(channels > 3) {dstPx[3] = (uint8_t)BYTE_BOUND(outAlpha * 255.f);}
+				}
+			}
+			
+		}
+
+	}
+
+	return *this;
+}

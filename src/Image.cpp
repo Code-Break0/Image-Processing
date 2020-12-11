@@ -207,38 +207,45 @@ Image& Image::decodeMessage(char* buffer, size_t* messageLength) {
 
 
 
-Image& Image::flipX() {
-	uint8_t tmp[4];
-	uint8_t* px1;
-	uint8_t* px2;
-	for(int y = 0;y < h;++y) {
-		for(int x = 0;x < w/2;++x) {
-			px1 = &data[(x + y * w) * channels];
-			px2 = &data[((w - 1 - x) + y * w) * channels];
+	Image& Image::flipX() {
+		uint8_t tmp[4];
+		uint8_t* px1;
+		uint8_t* px2;
+		for(int y = 0;y < h;++y) {
+			for(int x = 0;x < w/2;++x) {
+				px1 = &data[(x + y * w) * channels];
+				px2 = &data[((w - 1 - x) + y * w) * channels];
 
-			memcpy(tmp, px1, channels);
-			memcpy(px1, px2, channels);
-			memcpy(px2, tmp, channels);
+				memcpy(tmp, px1, channels);
+				memcpy(px1, px2, channels);
+				memcpy(px2, tmp, channels);
+			}
 		}
+		return *this;
 	}
-	return *this;
-}
-Image& Image::flipY() {
-	uint8_t tmp[4];
-	uint8_t* px1;
-	uint8_t* px2;
-	for(int x = 0;x < w;++x) {
-		for(int y = 0;y < h/2;++y) {
-			px1 = &data[(x + y * w) * channels];
-			px2 = &data[(x + (h - 1 - y) * w) * channels];
+	Image& Image::flipY() {
+		uint8_t tmp[4];
+		uint8_t* px1;
+		uint8_t* px2;
+		for(int x = 0;x < w;++x) {
+			for(int y = 0;y < h/2;++y) {
+				px1 = &data[(x + y * w) * channels];
+				px2 = &data[(x + (h - 1 - y) * w) * channels];
 
-			memcpy(tmp, px1, channels);
-			memcpy(px1, px2, channels);
-			memcpy(px2, tmp, channels);
+				memcpy(tmp, px1, channels);
+				memcpy(px1, px2, channels);
+				memcpy(px2, tmp, channels);
+			}
 		}
+		return *this;
 	}
-	return *this;
-}
+
+
+
+
+
+
+
 
 Image& Image::overlay(const Image& source, int x, int y) {
 
@@ -285,3 +292,68 @@ Image& Image::overlay(const Image& source, int x, int y) {
 
 	return *this;
 }
+
+
+
+
+Image& Image::overlayText(const char* txt, const Font& font, int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+	size_t len = strlen(txt);
+	SFT_Char c;
+	int32_t dx, dy;
+	uint8_t* dstPx;
+	uint8_t srcPx;
+	uint8_t color[4] = {r, g, b, a};
+
+	for(size_t i = 0;i < len;++i) {
+		if(sft_char(&font.sft, txt[i], &c) != 0) {
+			printf("\e[31m[ERROR] Font is missing character '%c'\e[0m\n", txt[i]);
+			continue;
+		}
+
+		for(uint16_t sy = 0;sy < c.height;++sy) {
+			dy = sy + y + c.y;
+			if(dy < 0) {continue;}
+			else if(dy >= h) {break;}
+			for(uint16_t sx = 0;sx < c.width;++sx) {
+				dx = sx + x + c.x;
+				if(dx < 0) {continue;}
+				else if(dx >= w) {break;}
+				dstPx = &data[(dx + dy * w) * channels];
+				srcPx = c.image[sx + sy * c.width];
+
+				if(srcPx != 0) {
+					float srcAlpha = (srcPx / 255.f) * (a / 255.f);
+					float dstAlpha = channels < 4 ? 1 : dstPx[3] / 255.f;
+					if(srcAlpha > .99 && dstAlpha > .99) {
+						memcpy(dstPx, color, channels);
+					}
+					else {
+						float outAlpha = srcAlpha + dstAlpha * (1 - srcAlpha);
+						if(outAlpha < .01) {
+							memset(dstPx, 0, channels);
+						}
+						else {
+							for(int chnl = 0;chnl < channels;++chnl) {
+								dstPx[chnl] = (uint8_t)BYTE_BOUND((color[chnl]/255.f * srcAlpha + dstPx[chnl]/255.f * dstAlpha * (1 - srcAlpha)) / outAlpha * 255.f);
+							}
+							if(channels > 3) {dstPx[3] = (uint8_t)BYTE_BOUND(outAlpha * 255.f);}
+						}
+					}
+				}
+			}
+		}
+
+		x += c.advance;
+		free(c.image);
+	}
+
+
+	return *this;
+}
+
+
+
+
+
+
+

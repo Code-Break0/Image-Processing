@@ -1,11 +1,15 @@
 #include <stdint.h>
 #include <cstdio>
+#include "schrift.h"
 
 #define STEG_HEADER_SIZE sizeof(uint32_t) * 8
 
 enum ImageType {
 	PNG, JPG, BMP, TGA
 };
+
+struct Font;
+
 
 struct Image {
 	uint8_t* data = NULL;
@@ -46,14 +50,28 @@ struct Image {
 
 	Image& flipX();
 	Image& flipY();
-	
+
 	Image& overlay(const Image& source, int x, int y);
+
+	Image& overlayText(const char* txt, const Font& font, int x, int y, uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, uint8_t a = 255);
+
 };
 
 
-
-
-
-
-
-
+struct Font {
+	SFT sft = {NULL, 12, 12, 0, 0, SFT_DOWNWARD_Y|SFT_RENDER_IMAGE};
+	Font(const char* fontfile, uint16_t size) {
+		if((sft.font = sft_loadfile(fontfile)) == NULL) {
+			printf("\e[31m[ERROR] Failed to load %s\e[0m\n", fontfile);
+			return;
+		}
+		setSize(size);
+	} 
+	~Font() {
+		sft_freefont(sft.font);
+	}
+	void setSize(uint16_t size) {
+		sft.xScale = size;
+		sft.yScale = size;
+	}
+};

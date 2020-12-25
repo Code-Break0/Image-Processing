@@ -55,6 +55,7 @@ struct Image {
 
 	Image& overlayText(const char* txt, const Font& font, int x, int y, uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, uint8_t a = 255);
 
+	Image& crop(uint16_t cx, uint16_t cy, uint16_t cw, uint16_t ch);
 };
 
 

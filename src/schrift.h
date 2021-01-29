@@ -21,6 +21,28 @@
 extern "C" {
 #endif
 
+#include <assert.h>
+#include <errno.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(_MSC_VER)
+# define restrict __restrict
+#endif
+
+#if defined(_WIN32)
+# define WIN32_LEAN_AND_MEAN 1
+# include <windows.h>
+#else
+# include <fcntl.h>
+# include <sys/mman.h>
+# include <sys/stat.h>
+# include <unistd.h>
+#endif
+
 #define SFT_DOWNWARD_Y    0x01
 #define SFT_RENDER_IMAGE  0x02
 #define SFT_CATCH_MISSING 0x04

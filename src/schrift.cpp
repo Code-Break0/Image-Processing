@@ -1,27 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-
-#include <assert.h>
-#include <errno.h>
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#if defined(_MSC_VER)
-# define restrict __restrict
-#endif
-
-#if defined(_WIN32)
-# define WIN32_LEAN_AND_MEAN 1
-# include <windows.h>
-#else
-# include <fcntl.h>
-# include <sys/mman.h>
-# include <sys/stat.h>
-# include <unistd.h>
-#endif
-
 #include "schrift.h"
 
 #define SCHRIFT_VERSION "0.8.0"

@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 	Image Gy(img.w, img.h, 1);
 	for(uint64_t k=0; k<img_size; ++k) {
 		Gx.data[k] = (uint8_t)(255*(gx[k]-mnx)/(mxx-mnx));
-		Gy.data[k] = (uint8_t)(255*(gy[k]-mny)/(mxx-mny));
+		Gy.data[k] = (uint8_t)(255*(gy[k]-mny)/(mxy-mny));
 	}
 	Gx.write("imgs/Gx.png");
 	Gy.write("imgs/Gy.png");
